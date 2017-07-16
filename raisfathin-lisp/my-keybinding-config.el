@@ -3,6 +3,7 @@
   (define-key evil-normal-state-map ",es" 'eval-last-sexp)
   (define-key evil-normal-state-map ",tt" 'ansi-term)
   (define-key evil-normal-state-map ",gs" 'magit-status)
+  (define-key evil-normal-state-map ",pf" 'projectile-find-file)
   (define-key evil-visual-state-map ",cf" 'clang-format)
   (define-key evil-normal-state-map ",cf" 'clang-format))
 
