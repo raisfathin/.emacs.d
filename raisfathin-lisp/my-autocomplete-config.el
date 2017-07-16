@@ -17,7 +17,11 @@
   :config
   (company-ycmd-setup))
 
-(require 'ido)
-(ido-mode t)
+(use-package flx-ido
+  :ensure t
+  :config
+  (ido-mode t)
+  (ido-everywhere 1)
+  (flx-ido-mode 1))
 
 (provide 'my-autocomplete-config)
