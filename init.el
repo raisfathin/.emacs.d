@@ -7,6 +7,7 @@
 (require 'my-autocomplete-config)
 (require 'my-appearance-config)
 (require 'my-c++-config)
+(require 'my-project-mgmt-config)
 (require 'my-keybinding-config)
 
 (custom-set-variables
