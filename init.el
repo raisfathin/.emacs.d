@@ -7,6 +7,7 @@
 (require 'my-autocomplete-config)
 (require 'my-appearance-config)
 (require 'my-c++-config)
+(require 'my-keybinding-config)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -18,7 +19,7 @@
     ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" default)))
  '(package-selected-packages
    (quote
-    (google-c-style modern-cpp-font-lock solarized-theme moe-theme zenburn-theme company-mode use-package evil company-ycmd))))
+    (projectile magit google-c-style modern-cpp-font-lock solarized-theme moe-theme zenburn-theme company-mode use-package evil company-ycmd))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
