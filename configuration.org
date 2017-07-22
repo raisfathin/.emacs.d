@@ -51,7 +51,7 @@
 * Autocompletions
 
 #+BEGIN_SRC emacs-lisp
-(use-package company-mode
+(use-package company
   :ensure t
   :init
   (add-hook 'after-init-hook 'global-company-mode))
