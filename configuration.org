@@ -1,0 +1,137 @@
+* Package
+
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives
+	     '("melpa" . "https://melpa.org/packages/"))
+
+(package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+#+END_SRC
+
+* Evil Mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-C-u-scroll t)
+  :config
+  (evil-mode 1))
+#+END_SRC
+
+* Appearance
+
+#+BEGIN_SRC emacs-lisp
+(use-package solarized-theme
+  :ensure t
+  :config
+  (load-theme 'solarized-dark t))
+
+(global-linum-mode)
+(electric-pair-mode)
+(tool-bar-mode -1)
+#+END_SRC
+
+* Autocompletions
+
+#+BEGIN_SRC emacs-lisp
+(use-package company-mode
+  :ensure t
+  :init
+  (add-hook 'after-init-hook 'global-company-mode))
+
+(use-package ycmd
+  :ensure t
+  :init
+  (add-hook 'after-init-hook #'global-ycmd-mode)
+  (set-variable 'ycmd-server-command '("python" "/Users/raisfathin/.vim/bundle/YouCompleteMe/third_party/ycmd/ycmd"))
+  (set-variable 'ycmd-global-config "/Users/raisfathin/.ycm_extra_conf.py"))
+
+(use-package company-ycmd
+  :ensure t
+  :config
+  (company-ycmd-setup))
+
+(use-package flx-ido
+  :ensure t)
+
+(use-package ido-vertical-mode
+  :ensure t
+  :after flx-ido
+  :config
+  (ido-mode t)
+  (ido-vertical-mode t)
+  (ido-everywhere 1)
+  (flx-ido-mode 1))
+#+END_SRC
+
+* Major Mode Specific Configs
+  
+** C++
+
+#+BEGIN_SRC emacs-lisp
+(use-package modern-cpp-font-lock
+  :ensure t
+  :config
+  (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+
+(use-package google-c-style
+  :ensure t
+  :config
+  (add-hook 'c-mode-common-hook 'google-set-c-style))
+
+(load "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
+#+END_SRC
+
+   
+** OCaml
+
+#+BEGIN_SRC emacs-lisp
+(use-package tuareg
+  :ensure t)
+#+END_SRC
+
+   
+** Term
+
+#+BEGIN_SRC emacs-lisp
+(with-eval-after-load 'evil
+  (evil-set-initial-state 'term-mode 'emacs))
+(with-eval-after-load 'term
+  (setq term-scroll-to-bottom-on-output t))
+#+END_SRC
+
+   
+** Org
+
+#+BEGIN_SRC emacs-lisp
+(setq org-src-fontify-natively t)
+#+END_SRC
+
+* Project Management Stuff
+
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :ensure t)
+
+(use-package projectile
+  :ensure t)
+#+END_SRC
+
+* Keybindings
+
+#+BEGIN_SRC emacs-lisp
+(with-eval-after-load 'evil
+  (define-key evil-normal-state-map ",bb" 'ido-switch-buffer)
+  (define-key evil-normal-state-map ",es" 'eval-last-sexp)
+  (define-key evil-normal-state-map ",tt" 'ansi-term)
+  (define-key evil-normal-state-map ",gs" 'magit-status)
+  (define-key evil-normal-state-map ",pf" 'projectile-find-file)
+  (define-key evil-visual-state-map ",cf" 'clang-format)
+  (define-key evil-normal-state-map ",cf" 'clang-format))
+#+END_SRC
