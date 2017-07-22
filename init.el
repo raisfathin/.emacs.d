@@ -9,7 +9,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (linum-relative nlinum-relative nlinum tuareg ido-vertical-mode company-mode use-package solarized-theme projectile moe-theme modern-cpp-font-lock magit google-c-style general flx-ido evil company-ycmd))))
+    (exec-path-from-shell linum-relative nlinum-relative nlinum tuareg ido-vertical-mode company-mode use-package solarized-theme projectile moe-theme modern-cpp-font-lock magit google-c-style general flx-ido evil company-ycmd))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
