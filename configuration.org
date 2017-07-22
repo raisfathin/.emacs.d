@@ -121,7 +121,9 @@
 ** Org
 
 #+BEGIN_SRC emacs-lisp
-(setq org-src-fontify-natively t)
+(setq org-src-fontify-natively t
+      org-src-preserve-indentation t
+      org-src-tab-acts-natively t)
 #+END_SRC
 
 * Project Management Stuff
