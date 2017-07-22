@@ -24,7 +24,7 @@
   (evil-mode 1))
 #+END_SRC
 
-* Appearance
+* Appearances
 
 #+BEGIN_SRC emacs-lisp
 (use-package solarized-theme
@@ -32,7 +32,18 @@
   :config
   (load-theme 'solarized-dark t))
 
-(global-linum-mode)
+(use-package nlinum
+  :ensure t)
+
+(use-package linum-relative
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook 'linum-relative-on))
+
+(add-hook 'prog-mode-hook 'linum-on)
+(add-hook 'text-mode-hook (lambda ()
+			    (linum-on)
+			    (linum-relative-off)))
 (electric-pair-mode)
 (tool-bar-mode -1)
 #+END_SRC
