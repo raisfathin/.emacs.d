@@ -45,6 +45,12 @@
   :config
   (nyan-mode))
 
+(use-package smart-mode-line
+  :ensure t
+  :after solarized-theme
+  :config
+  (sml/setup))
+
 (add-hook 'prog-mode-hook 'linum-on)
 (add-hook 'text-mode-hook (lambda ()
 			    (linum-on)
