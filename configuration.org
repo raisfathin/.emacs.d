@@ -137,6 +137,19 @@
       org-src-tab-acts-natively t)
 #+END_SRC
 
+
+** Web Mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (setq web-mode-engines-alist
+	'(("php" . "\\.phtml\\'")
+	  ("blade" . "\\.blade\\."))))
+#+END_SRC
+
 * Project Management Stuff
 
 #+BEGIN_SRC emacs-lisp
