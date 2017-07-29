@@ -40,6 +40,11 @@
   :config
   (add-hook 'prog-mode-hook 'linum-relative-on))
 
+(use-package nyan-mode
+  :ensure t
+  :config
+  (nyan-mode))
+
 (add-hook 'prog-mode-hook 'linum-on)
 (add-hook 'text-mode-hook (lambda ()
 			    (linum-on)
