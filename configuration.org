@@ -150,6 +150,14 @@
 (setq org-src-fontify-natively t
       org-src-preserve-indentation t
       org-src-tab-acts-natively t)
+
+(use-package ox-reveal
+  :ensure t
+  :config
+  (setq org-reveal-root "file:///Users/raisfathin/git/reveal.js"))
+
+(use-package htmlize
+  :ensure t)
 #+END_SRC
 
 
