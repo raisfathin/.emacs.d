@@ -41,15 +41,30 @@
 * Appearances
 
 #+BEGIN_SRC emacs-lisp
-(use-package solarized-theme
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'solarized-dark t))
+
+;; (use-package flatui-dark-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'flatui-dark t))
+
+(use-package nord-theme
   :ensure t
   :config
-  (load-theme 'solarized-dark t))
+  (load-theme 'nord t))
 
 ;; (use-package material-theme
 ;;   :ensure t
 ;;   :config
 ;;   (load-theme 'material t))
+
+(use-package rainbow-delimiters
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
 (use-package nlinum
   :ensure t)
@@ -70,12 +85,17 @@
   :config
   (sml/setup))
 
-(add-hook 'prog-mode-hook 'linum-on)
+(add-hook 'prog-mode-hook (lambda ()
+                            (linum-on)
+                            (rainbow-delimiters-mode)))
 (add-hook 'text-mode-hook (lambda ()
 			    (linum-on)
 			    (linum-relative-off)))
 (electric-pair-mode)
 (tool-bar-mode -1)
+
+;; Auto refresh buffers
+(global-auto-revert-mode t)
 #+END_SRC
 
 * Autocompletions
@@ -127,7 +147,6 @@
 #+END_SRC
 
 * Major Mode Specific Configs
-  
 ** C++
 
 #+BEGIN_SRC emacs-lisp
@@ -141,9 +160,16 @@
   :config
   (add-hook 'c-mode-common-hook 'google-set-c-style))
 
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (set (make-local-variable 'compile-command)
+                 (concat
+                  "g++ -Wl,-stack_size -Wl,0x1000000000 -std=c++14 -g -D__DEBUG -fsanitize=address -o "
+                  (shell-quote-argument (file-name-sans-extension buffer-file-name))
+                  " " (shell-quote-argument buffer-file-name)))))
+
 (load "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
 #+END_SRC
-
 
 ** D
 
@@ -157,9 +183,12 @@
 #+BEGIN_SRC emacs-lisp
 (use-package tuareg
   :ensure t)
+
+(add-to-list 'load-path "/Users/raisfathin/.opam/system/share/emacs/site-lisp")
+
+(require 'ocp-indent)
 #+END_SRC
 
-   
 ** Term
 
 #+BEGIN_SRC emacs-lisp
@@ -169,7 +198,6 @@
   (setq term-scroll-to-bottom-on-output t))
 #+END_SRC
 
-   
 ** Org
 
 #+BEGIN_SRC emacs-lisp
@@ -185,7 +213,6 @@
 (use-package htmlize
   :ensure t)
 #+END_SRC
-
 
 ** Web Mode
 
@@ -205,7 +232,17 @@
 	  ("blade" . "\\.blade\\."))))
 #+END_SRC
 
-
+** JSX
+#+BEGIN_SRC emacs-lisp
+(use-package rjsx-mode
+  :ensure t
+  :config (setq js2-basic-offset 2))
+#+END_SRC
+** Rust
+#+BEGIN_SRC emacs-lisp
+(use-package rust-mode
+  :ensure t)
+#+END_SRC 
 ** Typescript
 
 #+BEGIN_SRC elisp
@@ -242,6 +279,12 @@
 (use-package vue-mode
   :ensure t)
 #+END_SRC   
+
+** Haskell
+#+BEGIN_SRC emacs-lisp
+(use-package haskell-mode
+  :ensure t)
+#+END_SRC
 
 * Project Management Stuff
 
