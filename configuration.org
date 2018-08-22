@@ -36,6 +36,16 @@
   :after vimish-fold
   :config
   (evil-vimish-fold-mode 1))
+
+(use-package evil-leader
+  :ensure t
+  :config
+  (global-evil-leader-mode))
+
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 #+END_SRC
 
 * Appearances
@@ -169,8 +179,51 @@
                   " " (shell-quote-argument buffer-file-name)))))
 
 (load "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
+
+(defadvice c-lineup-arglist (around my activate)
+  "Improve indentation of continued C++11 lambda function opened as argument."
+  (setq ad-return-value
+        (if (and (equal major-mode 'c++-mode)
+                 (ignore-errors
+                   (save-excursion
+                     (goto-char (c-langelem-pos langelem))
+                     ;; Detect "[...](" or "[...]{". preceded by "," or "(",
+                     ;;   and with unclosed brace.
+                     (looking-at ".*[(,][ \t]*\\[[^]]*\\][ \t]*[({][^}]*$"))))
+            0                           ; no additional indent
+          ad-do-it)))                   ; default behavior
 #+END_SRC
 
+** Common Lisp
+#+BEGIN_SRC emacs-lisp
+(use-package slime
+  :ensure t
+  :init
+  (setq inferior-lisp-program "/usr/local/bin/sbcl")
+  (setq slime-contribs '(slime-fancy))
+  (evil-leader/set-key-for-mode 'lisp-mode
+    "cd" 'slime-compile-defun
+    "lf" 'slime-load-file))
+
+(use-package parinfer
+  :ensure t
+  :bind
+  (("C-," . parinfer-toggle-mode))
+  :init
+  (progn
+    (setq parinfer-extensions
+          '(defaults
+             pretty-parens
+             evil
+             paredit
+             smart-tab
+             smart-yank))
+    (add-hook 'clojure-mode-hook #'parinfer-mode)
+    (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'common-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'scheme-mode-hook #'parinfer-mode)
+    (add-hook 'lisp-mode-hook #'parinfer-mode)))
+#+END_SRC
 ** D
 
 #+BEGIN_SRC emacs-lisp
@@ -212,6 +265,11 @@
 
 (use-package htmlize
   :ensure t)
+
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 #+END_SRC
 
 ** Web Mode
@@ -307,6 +365,10 @@
   (define-key evil-normal-state-map ",pf" 'projectile-find-file)
   (define-key evil-visual-state-map ",cf" 'clang-format)
   (define-key evil-normal-state-map ",cf" 'clang-format))
+
+(evil-leader/set-leader ",")
+(evil-leader/set-key
+  "f" 'find-file)
 #+END_SRC
 
 * Music Player
