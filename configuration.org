@@ -15,9 +15,20 @@
   (package-install 'use-package))
 #+END_SRC
 
+* Variables
+#+BEGIN_SRC emacs-lisp
+  (defvar *clang-format-path* "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
+  (defvar *opam-site-lisp* "/Users/raisfathin/.opam/system/share/emacs/site-lisp")
+#+END_SRC
 * Evil Mode
 
 #+BEGIN_SRC emacs-lisp
+(use-package evil-leader
+  :ensure t
+  :config
+  (evil-leader/set-leader ",")
+  (global-evil-leader-mode))
+
 (use-package evil
   :ensure t
   :init
@@ -36,11 +47,6 @@
   :after vimish-fold
   :config
   (evil-vimish-fold-mode 1))
-
-(use-package evil-leader
-  :ensure t
-  :config
-  (global-evil-leader-mode))
 
 (use-package evil-surround
   :ensure t
@@ -160,38 +166,44 @@
 ** C++
 
 #+BEGIN_SRC emacs-lisp
-(use-package modern-cpp-font-lock
-  :ensure t
-  :config
-  (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+  (use-package modern-cpp-font-lock
+    :ensure t
+    :config
+    (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
-(use-package google-c-style
-  :ensure t
-  :config
-  (add-hook 'c-mode-common-hook 'google-set-c-style))
+  (use-package google-c-style
+    :ensure t
+    :config
+    (add-hook 'c-mode-common-hook 'google-set-c-style))
 
-(add-hook 'c++-mode-hook
-          (lambda ()
-            (set (make-local-variable 'compile-command)
-                 (concat
-                  "g++ -Wl,-stack_size -Wl,0x1000000000 -std=c++14 -g -D__DEBUG -fsanitize=address -o "
-                  (shell-quote-argument (file-name-sans-extension buffer-file-name))
-                  " " (shell-quote-argument buffer-file-name)))))
+  (defun compile-c++-cp (is-debug)
+    (interactive "sDebug (y/n): ")
+    (let ((command (format "g++ -Wl,-stack_size -Wl,0x1000000000 -std=c++14 %s -o %s %s"
+                           (if (string= is-debug "y")
+                               " -g -D__DEBUG -fsanitize=address -D_GLIBCXX_DEBUG "
+                               " -O2 ")
+                           (shell-quote-argument (file-name-sans-extension buffer-file-name))
+                           (shell-quote-argument buffer-file-name))))
+      (compile command)))
 
-(load "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
+  (evil-leader/set-key-for-mode 'c++-mode
+    "ccp" 'compile-c++-cp)
 
-(defadvice c-lineup-arglist (around my activate)
-  "Improve indentation of continued C++11 lambda function opened as argument."
-  (setq ad-return-value
-        (if (and (equal major-mode 'c++-mode)
-                 (ignore-errors
-                   (save-excursion
-                     (goto-char (c-langelem-pos langelem))
-                     ;; Detect "[...](" or "[...]{". preceded by "," or "(",
-                     ;;   and with unclosed brace.
-                     (looking-at ".*[(,][ \t]*\\[[^]]*\\][ \t]*[({][^}]*$"))))
-            0                           ; no additional indent
-          ad-do-it)))                   ; default behavior
+  (when (file-exists-p *clang-format-path*)
+      (load *clang-format-path*))
+
+  (defadvice c-lineup-arglist (around my activate)
+    "Improve indentation of continued C++11 lambda function opened as argument."
+    (setq ad-return-value
+          (if (and (equal major-mode 'c++-mode)
+                   (ignore-errors
+                     (save-excursion
+                       (goto-char (c-langelem-pos langelem))
+                       ;; Detect "[...](" or "[...]{". preceded by "," or "(",
+                       ;;   and with unclosed brace.
+                       (looking-at ".*[(,][ \t]*\\[[^]]*\\][ \t]*[({][^}]*$"))))
+              0                           ; no additional indent
+            ad-do-it)))                   ; default behavior
 #+END_SRC
 
 ** Common Lisp
@@ -234,12 +246,12 @@
 ** OCaml
 
 #+BEGIN_SRC emacs-lisp
-(use-package tuareg
-  :ensure t)
+  (use-package tuareg
+    :ensure t)
 
-(add-to-list 'load-path "/Users/raisfathin/.opam/system/share/emacs/site-lisp")
-
-(require 'ocp-indent)
+  (when (file-exists-p *opam-site-lisp*)
+    (add-to-list 'load-path *opam-site-lisp*)
+    (require 'ocp-indent))
 #+END_SRC
 
 ** Term
@@ -366,7 +378,6 @@
   (define-key evil-visual-state-map ",cf" 'clang-format)
   (define-key evil-normal-state-map ",cf" 'clang-format))
 
-(evil-leader/set-leader ",")
 (evil-leader/set-key
   "f" 'find-file)
 #+END_SRC
