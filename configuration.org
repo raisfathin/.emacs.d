@@ -368,6 +368,11 @@
   :ensure t)
 #+END_SRC
 
+** Racket
+#+BEGIN_SRC elisp
+(use-package racket-mode
+  :ensure t)
+#+END_SRC
 * Project Management Stuff
 
 #+BEGIN_SRC emacs-lisp
