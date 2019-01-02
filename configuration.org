@@ -77,6 +77,11 @@
 ;;   :config
 ;;   (load-theme 'material t))
 
+;; (use-package zenburn-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'zenburn t))
+
 (use-package rainbow-delimiters
   :ensure t
   :init
@@ -95,6 +100,9 @@
   :config
   (nyan-mode))
 
+(use-package fireplace
+  :ensure t)
+
 (use-package smart-mode-line
   :ensure t
   :after solarized-theme
@@ -109,6 +117,7 @@
 			    (linum-relative-off)))
 (electric-pair-mode)
 (tool-bar-mode -1)
+(menu-bar-mode -1)
 
 ;; Auto refresh buffers
 (global-auto-revert-mode t)
@@ -249,9 +258,12 @@
   (use-package tuareg
     :ensure t)
 
+(add-hook 'tuareg-mode-hook (lambda () (electric-indent-mode 0))
+(add-hook 'tuareg-mode-hook (lambda () (setq mode-name "🐫 ")))
+
   (when (file-exists-p *opam-site-lisp*)
     (add-to-list 'load-path *opam-site-lisp*)
-    (require 'ocp-indent))
+    (require 'ocp-indent)))
 #+END_SRC
 
 ** Term
