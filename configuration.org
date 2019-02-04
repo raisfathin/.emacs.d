@@ -187,9 +187,9 @@
 
   (defun compile-c++-cp (is-debug)
     (interactive "sDebug (y/n): ")
-    (let ((command (format "g++ -Wl,-stack_size -Wl,0x1000000000 -std=c++14 %s -o %s %s"
+    (let ((command (format "g++-8 -Wl,-stack_size -Wl,0x1000000000 -std=c++14 %s -o %s %s"
                            (if (string= is-debug "y")
-                               " -g -D__DEBUG -fsanitize=address -D_GLIBCXX_DEBUG "
+                               " -g -D__DEBUG -fsanitize=address -D_GLIBCXX_DEBUG -fvisibility=hidden "
                                " -O2 ")
                            (shell-quote-argument (file-name-sans-extension buffer-file-name))
                            (shell-quote-argument buffer-file-name))))
