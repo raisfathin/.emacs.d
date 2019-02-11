@@ -52,6 +52,14 @@
   :ensure t
   :config
   (global-evil-surround-mode 1))
+
+;; https://github.com/syl20bnr/spacemacs/issues/10410
+(defun kill-minibuffer ()
+  (interactive)
+  (when (windowp (active-minibuffer-window))
+    (evil-ex-search-exit)))
+
+(add-hook 'mouse-leave-buffer-hook #'kill-minibuffer)
 #+END_SRC
 
 * Appearances
