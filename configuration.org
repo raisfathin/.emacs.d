@@ -18,11 +18,14 @@
 * Variables
 #+BEGIN_SRC emacs-lisp
   (defvar *clang-format-path* "/usr/local/Cellar/clang-format/2017-06-22/share/clang/clang-format.el")
-  (defvar *opam-site-lisp* "/Users/raisfathin/.opam/system/share/emacs/site-lisp")
+  (defvar *opam-site-lisp* "/Users/raisfathin/.opam/4.08.0/share/emacs/site-lisp")
+  (defvar *cp-util-path* "/Users/raisfathin/Programming/Util")
 #+END_SRC
 * Evil Mode
 
 #+BEGIN_SRC emacs-lisp
+(setq evil-want-C-u-scroll t)
+
 (use-package evil-leader
   :ensure t
   :config
@@ -32,7 +35,6 @@
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-C-u-scroll t)
   (setq evil-search-module 'isearch)
   (setq evil-vsplit-window-right t)
   :config
@@ -40,7 +42,8 @@
 
 (use-package vimish-fold
   :ensure t
-  :after evil)
+  :after evil
+  :config (vimish-fold-global-mode 1))
 
 (use-package evil-vimish-fold
   :ensure t
@@ -62,46 +65,36 @@
 (add-hook 'mouse-leave-buffer-hook #'kill-minibuffer)
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+(use-package multiple-cursors
+  :ensure t
+  :config
+  (progn
+    (global-set-key (kbd "C->") #'mc/mark-next-like-this)
+    (global-set-key (kbd "C-<") #'mc/mark-previous-like-this)))
+#+END_SRC
+
 * Appearances
 
 #+BEGIN_SRC emacs-lisp
-;; (use-package solarized-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'solarized-dark t))
 
-;; (use-package flatui-dark-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'flatui-dark t))
-
-(use-package nord-theme
+(set-face-attribute 'default nil :font "Ubuntu Mono-16")
+(use-package gruvbox-theme
   :ensure t
   :config
-  (load-theme 'nord t))
+  (load-theme 'gruvbox-dark-hard t))
 
-;; (use-package material-theme
+;; (use-package plan9-theme
 ;;   :ensure t
 ;;   :config
-;;   (load-theme 'material t))
-
-;; (use-package zenburn-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'zenburn t))
+;;   (load-theme 'plan9-theme t))
 
 (use-package rainbow-delimiters
   :ensure t
   :init
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
-(use-package nlinum
-  :ensure t)
-
-(use-package linum-relative
-  :ensure t
-  :config
-  (add-hook 'prog-mode-hook 'linum-relative-on))
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
 
 (use-package nyan-mode
   :ensure t
@@ -118,12 +111,13 @@
   (sml/setup))
 
 (add-hook 'prog-mode-hook (lambda ()
-                            (linum-on)
+                            ;; (linum-on)
                             (rainbow-delimiters-mode)))
-(add-hook 'text-mode-hook (lambda ()
-			    (linum-on)
-			    (linum-relative-off)))
 (electric-pair-mode)
+(setq electric-pair-inhibit-predicate
+      (lambda (c)
+        (if (char-equal c ?\") t (electric-pair-default-inhibit c))))
+
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 
@@ -139,17 +133,33 @@
   :init
   (add-hook 'after-init-hook 'global-company-mode))
 
-(use-package ycmd
+(use-package lsp-mode
   :ensure t
-  :init
-  (add-hook 'after-init-hook #'global-ycmd-mode)
-  (set-variable 'ycmd-server-command '("python" "/Users/raisfathin/.vim/bundle/YouCompleteMe/third_party/ycmd/ycmd"))
-  (set-variable 'ycmd-global-config "/Users/raisfathin/.ycm_extra_conf.py"))
-
-(use-package company-ycmd
-  :ensure t
+  :hook (((c-mode c-or-c++-mode) . lsp)
+         (go-mode . lsp-deferred))
+  :commands (lsp lsp-deferred)
+  :init (progn
+          (setq lsp-clients-clangd-executable "/usr/local/opt/llvm/bin/clangd")
+          (setq lsp-gopls-server-path "/Users/raisfathin/go/bin/gopls"))
   :config
-  (company-ycmd-setup))
+  (setq lsp-enable-snippet nil)
+  (setq lsp-prefer-flymake nil)
+  (setq lsp-enable-symbol-highlighting nil))
+
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode)
+
+(use-package company-lsp
+  :after company
+  :init (push 'company-lsp company-backends)
+  :commands company-lsp
+  :config (setq company-lsp-cache-candidates 'auto))
 
 (use-package flx-ido
   :ensure t)
@@ -179,6 +189,12 @@
   (global-set-key (kbd "M-p") 'ace-window))
 #+END_SRC
 
+* Programming Tools
+#+BEGIN_SRC
+(use-package imenu-list
+  :ensure t
+  :config (global-set-key (kbd "C-'") #'imenu-list-smart-toggle))
+#+END_SRC
 * Major Mode Specific Configs
 ** C++
 
@@ -193,34 +209,49 @@
     :config
     (add-hook 'c-mode-common-hook 'google-set-c-style))
 
-  (defun compile-c++-cp (is-debug)
-    (interactive "sDebug (y/n): ")
-    (let ((command (format "g++-8 -Wl,-stack_size -Wl,0x1000000000 -std=c++14 %s -o %s %s"
-                           (if (string= is-debug "y")
-                               " -g -D__DEBUG -fsanitize=address -D_GLIBCXX_DEBUG -fvisibility=hidden "
-                               " -O2 ")
+  (setq rsf--cp-compiler "g++")
+
+  (defun rsf--cp-switch-compiler ()
+    (interactive)
+    (let ((other-compiler (if (string= rsf--cp-compiler "g++-8")
+                              "g++"
+                            "g++-8")))
+      (when (y-or-n-p (format "Switch to %s? " other-compiler))
+          (setq rsf--cp-compiler other-compiler))))
+
+  (defun compile-c++-cp (is-release)
+    (interactive "sRelease (y/n): ")
+    (let ((command (format "%s -Wl,-stack_size -Wl,0x1000000000 -std=c++17 -I/Users/raisfathin/Programming/cpincludes %s -o %s %s"
+                           rsf--cp-compiler
+                           (if (string= is-release "y")
+                               " -O2 "
+                               " -ggdb -D__DEBUG -fsanitize=address -D_GLIBCXX_DEBUG ")
                            (shell-quote-argument (file-name-sans-extension buffer-file-name))
                            (shell-quote-argument buffer-file-name))))
-      (compile command)))
+      (set (make-local-variable 'compile-command) command)
+      (call-interactively #'compile)))
 
   (evil-leader/set-key-for-mode 'c++-mode
-    "ccp" 'compile-c++-cp)
+    "cpc" 'compile-c++-cp)
 
   (when (file-exists-p *clang-format-path*)
       (load *clang-format-path*))
 
-  (defadvice c-lineup-arglist (around my activate)
-    "Improve indentation of continued C++11 lambda function opened as argument."
-    (setq ad-return-value
-          (if (and (equal major-mode 'c++-mode)
-                   (ignore-errors
-                     (save-excursion
-                       (goto-char (c-langelem-pos langelem))
-                       ;; Detect "[...](" or "[...]{". preceded by "," or "(",
-                       ;;   and with unclosed brace.
-                       (looking-at ".*[(,][ \t]*\\[[^]]*\\][ \t]*[({][^}]*$"))))
-              0                           ; no additional indent
-            ad-do-it)))                   ; default behavior
+  (add-hook 'c-mode-common-hook
+            #'(lambda () (c-set-offset 'inlambda 0)))
+
+  ;; (defadvice c-lineup-arglist (around my activate)
+  ;;   "Improve indentation of continued C++11 lambda function opened as argument."
+  ;;   (setq ad-return-value
+  ;;         (if (and (equal major-mode 'c++-mode)
+  ;;                  (ignore-errors
+  ;;                    (save-excursion
+  ;;                      (goto-char (c-langelem-pos langelem))
+  ;;                      ;; Detect "[...](" or "[...]{". preceded by "," or "(",
+  ;;                      ;;   and with unclosed brace.
+  ;;                      (looking-at ".*[(,][ \t]*\\[[^]]*\\][ \t]*[({][^}]*$"))))
+  ;;             0                           ; no additional indent
+  ;;           ad-do-it)))                   ; default behavior
 #+END_SRC
 
 ** Common Lisp
@@ -229,7 +260,7 @@
   :ensure t
   :init
   (setq inferior-lisp-program "/usr/local/bin/sbcl")
-  (setq slime-contribs '(slime-fancy))
+  (setq slime-contribs '(slime-fancy slime-quicklisp slime-asdf))
   (evil-leader/set-key-for-mode 'lisp-mode
     "cd" 'slime-compile-defun
     "lf" 'slime-load-file))
@@ -252,6 +283,24 @@
     (add-hook 'common-lisp-mode-hook #'parinfer-mode)
     (add-hook 'scheme-mode-hook #'parinfer-mode)
     (add-hook 'lisp-mode-hook #'parinfer-mode)))
+
+(use-package paredit
+  :ensure t
+  :config
+  (progn
+    (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+    (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+    (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+    (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+    (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+    (add-hook 'scheme-mode-hook           #'enable-paredit-mode)))
+#+END_SRC
+** Clojure
+#+BEGIN_SRC elisp
+(use-package cider
+  :ensure t)
+
+(setq cider-default-repl-command "lein repl")
 #+END_SRC
 ** D
 
@@ -266,14 +315,22 @@
   (use-package tuareg
     :ensure t)
 
-(add-hook 'tuareg-mode-hook (lambda () (electric-indent-mode 0))
 (add-hook 'tuareg-mode-hook (lambda () (setq mode-name "🐫 ")))
 
   (when (file-exists-p *opam-site-lisp*)
     (add-to-list 'load-path *opam-site-lisp*)
-    (require 'ocp-indent)))
+    (require 'ocp-indent))
 #+END_SRC
 
+** Dart
+#+BEGIN_SRC elisp
+(use-package dart-mode
+  :ensure t
+  :config
+  (progn
+    (setq dart-format-on-save t)
+    (add-to-list 'eglot-server-programs '(dart-mode . ("dart_language_server")))))
+#+END_SRC
 ** Term
 
 #+BEGIN_SRC emacs-lisp
@@ -343,7 +400,8 @@
   (interactive)
   (tide-setup)
   (flycheck-mode +1)
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (setq flycheck-check-syntax-automatically '(save mode-enabled)
+        flycheck-idle-change-delay 4)
   (eldoc-mode +1)
   (tide-hl-identifier-mode +1)
   (company-mode +1))
@@ -373,12 +431,18 @@
 ** Haskell
 #+BEGIN_SRC emacs-lisp
 (use-package haskell-mode
-  :ensure t)
+  :ensure t
+  :config (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
 #+END_SRC
 
 ** Racket
 #+BEGIN_SRC elisp
 (use-package racket-mode
+  :ensure t)
+#+END_SRC
+** Go
+#+BEGIN_SRC emacs-lisp
+(use-package go-mode
   :ensure t)
 #+END_SRC
 * Project Management Stuff
@@ -389,6 +453,15 @@
 
 (use-package projectile
   :ensure t)
+
+(use-package treemacs
+  :ensure t)
+
+(use-package treemacs-evil
+  :after treemacs
+  :ensure t)
+
+(add-hook 'view-mode-hook 'evil-motion-state)
 #+END_SRC
 
 * Keybindings
@@ -423,6 +496,22 @@
     (setq emms-source-file-default-directory "~/Music")))
 #+END_SRC
 
+* Term
+#+BEGIN_SRC emacs-lisp
+(use-package multi-term
+  :ensure t
+  :init
+  (setq mult-term-program "/bin/zsh"))
+#+END_SRC
+* IRC
+#+BEGIN_SRC emacs-lisp
+(setq rcirc-server-alist
+  '(("irc.freenode.net" :port 6697 :encryption tls
+     :channels ())))
+(setq rcirc-default-nick "raisfathin")
+(setq rcirc-default-user-name "raisfathin")
+(setq rcirc-default-full-name "raisfathin")
+#+END_SRC
 * $PATH Fix
 
 #+BEGIN_SRC emacs-lisp
@@ -431,4 +520,19 @@
   :config
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
+#+END_SRC
+* Copy from terminal
+#+BEGIN_SRC elisp
+(defun rsf--copy ()
+  (interactive)
+  (unless (region-active-p)
+    (message-box "No active region.")
+    (return-from 'rsf--copy))
+  (shell-command-on-region (region-beginning) (region-end) "pbcopy"))
+
+(defun rsf--copy-all ()
+  (interactive)
+  (save-excursion
+    (mark-whole-buffer)
+    (rsf--copy)))
 #+END_SRC
